@@ -7,7 +7,7 @@
 
 3.  The order in which certain clauses are executed is important, they won't work if the order isn't followed. For example:
 
-    ```
+    ```sql
     SELECT *
     FROM customers
     WHERE customer_id = 1
@@ -20,7 +20,7 @@
 
 5.  **SELECT** clause, arithmetic operation and column aliases using the **AS** clause. In order to provide a column name with space in it, it needs to be put in inverted quotes. Parenthesis can be used to manage order of precedence of operators.
 
-    ```
+    ```sql
     SELECT
      first_name,
      last_name,
@@ -30,14 +30,14 @@
 
 6.  To filter out duplicate entries in a column, use **DISTINCT** keyword after **SELECT** clause.
 
-    ```
+    ```sql
     SELECT DISTINCT city
     FROM customers
     ```
 
 7.  Operators used in SQL: <,>,>=, <=, (!= and <>)
 
-    ```
+    ```sql
     SELECT points, first_name
     FROM customers
     WHERE state = 'VA'
@@ -51,7 +51,7 @@
 
 8.  **IN** operator:
 
-    ```
+    ```sql
     SELECT *
     FROM customers
     WHERE state IN ('VA', 'FL', 'GA')
@@ -59,7 +59,7 @@
 
 9.  When checking whether an attirbute is within a range of values, we use **BETWEEN** operator, the terminal values of this range are inclusive:
 
-    ```
+    ```sql
      SELECT *
      FROM customers
      WHERE points BETWEEN 1000 AND 3000
@@ -72,7 +72,7 @@
 
 10. **LIKE** operator allows us to check for certain string patterns in attirbutes, the condition is case-insensitive:
 
-    ```
+    ```sql
     SELECT *
     FROM customers
     WHERE last_name LIKE '%b%'
@@ -93,7 +93,7 @@
     Other characters used in **REGEXP**:
 
     1. **^** : Indicates the beginning condition for a string. Ex: '^field'
-    2. **$** : Indicates the ending condition for a string. Ex: 'field$'.
+    2. **\$** : Indicates the ending condition for a string. Ex: 'field$'.
     3. **|** : OR operator within REGEXP. Ex: 'field|mac' => customers with the name field or mac in their last name.
     4. **[]** : Set of characters that should take a position.
        Ex: '[abc]def, allowed string woudld be: adef, bdef, cdef'
@@ -103,39 +103,32 @@
 
 13. **ORDER BY** This clause helps with sorting of data column wise. MySQL supports sorting of data based on a column even if that column is not rendered using the **SELECT** clause.
 
-    ```
+    ```sql
     1.
     SELECT first_name, last_name
     FROM customers
     ORDER BY state DESC,  first_name
 
-    Note: In this example we're sorting the result in descending order by the name of the state and in alphabetical order as per the first_name
+    Note: In this example we are sorting the result in descending order by the name of the state and in alphabetical order as per the first_name.
 
     2.
     SELECT first_name, last_name, 10 AS points
     FROM customers
     ORDER BY 1,2
 
-    Note: In this example, we;re giving an alias column of value 10 as points and ordering the result by 1 and 2 which means the first and second columns mentioned after the SELECT clause.
-
-    3. Exercise Example
-    SELECT *, quantity * unit_price AS total_price
-    FROM order_items
-    WHERE order_id = 2
-    ORDER BY total_price DESC
+    Note: In this example, we are giving an alias column of value 10 as points and ordering the result by 1 and 2 which means the first and second columns mentioned after the SELECT clause.
     ```
 
-14. **LIMIT** clause limits the number of records returned in a query response. Ex: Exercise Solution
-    ```
+14. **LIMIT** clause limits the number of records returned in a query response.
+    ```sql
     SELECT *
     FROM customers
     ORDER BY points DESC
     LIMIT 3
     ```
-15. **JOIN**
-    Ex:
+15. **JOIN** - It is an operation that combines rows from two or more tables based on a related column between them. It allows you to retrieve data from multiple tables in a single query by specifying how the tables are related.
 
-    ```
+    ```sql
     SELECT order_id, o.customer_id, first_name, last_name
     FROM orders o
     JOIN customers c
@@ -148,7 +141,7 @@
 16. **Joining Tables across Databases:**
     Depending on the current database being **_USED_** as in the **USE** clause, the tables can be selected from different databases as illustrated below:
 
-    ```
+    ```sql
     USE sql_inventory;
 
     SELECT *
@@ -159,7 +152,7 @@
 
 17. **Self-Join**: Ex:
 
-    ```
+    ```sql
     USE sql_hr;
 
     SELECT e.employee_id, e.first_name, m.first_name AS manager
@@ -170,7 +163,7 @@
 
 18. **Joining Multiple Tables:** Ex:
 
-    ```
+    ```sql
     USE sql_store;
 
     SELECT o.order_id, o.order_date, c.first_name, c.last_name, os.name AS status
@@ -185,7 +178,7 @@
 
 20. **Compound Join**. Ex:
 
-    ```
+    ```sql
     SELECT *
     FROM order_items oi
     JOIN order_items oin
@@ -196,7 +189,7 @@
 
 21. **Explicit vs Implicit Join:** Both the statements work equivalently. Ex:
 
-    ```
+    ```sql
     -- Explicit Join Syntax
     SELECT *
     FROM orders 0
@@ -212,7 +205,7 @@
 22. **OUTER JOINS:** Two types: **LEFT JOIN** and **RIGHT JOIN**.
     In **LEFT** join all the records from the left table are returned irrespective of the join condition and the same applies for right table in a **RIGHT** join. Ex:
 
-    ```
+    ```sql
     SELECT
     c.customer_id, c.first_name, o.order_id
     FROM customers c
@@ -225,7 +218,7 @@
 
 23. **OUTER JOIN between Multiple Tables:** Ex:
 
-    ```
+    ```sql
     SELECT
         c.customer_id,
         c.first_name,
@@ -241,7 +234,7 @@
 
 24. **USING Clause:** The **USING** clause can only be used if the columns in the **ON** clause are named same in both the tables.
 
-    ```
+    ```sql
     SELECT *
     FROM order_items oi
     JOIN order_items_notes oin
@@ -253,48 +246,36 @@
     FROM order_items oi
     JOIN order_items_notes oin
         USING (order_id, product_id)
-
-    -- Exercise Solution
-    SELECT
-        p.date,
-        c.name AS client,
-        p.amount,
-        pm.name
-
-    FROM clients c
-
-    JOIN payments p
-    	USING (client_id)
-
-    JOIN payment_methods pm
-    	ON p.payment_method = pm.payment_method_id
     ```
 
-25. **NATURAL JOIN:**  We let the sql engine figure out the join on its own. That's why it is not a recommended JOIN to use.
+25. **NATURAL JOIN:** We let the sql engine figure out the join on its own. That's why it is not a recommended JOIN to use.
 
 26. **CROSS JOIN:** It is used to combine or join every record from the first table with every record of the second table.
-    ```
+
+    ```sql
     -- Implicit Syntax
-    SELECT 
-	c.first_name AS customer,
+    SELECT
+    c.first_name AS customer,
     p.name AS product
 
     FROM customers c, orders o
     ORDER BY c.first_name
 
     -- Explicit Syntax (Recommended)
-    SELECT 
-	c.first_name AS customer,
+    SELECT
+    c.first_name AS customer,
     p.name AS product
 
     FROM customers c
     CROSS JOIN orders o
     ORDER BY c.first_name
     ```
+
 27. **UNIONS:** Used to combine rows from different queries against same or different tables.
-    ```
-    SELECT 
-	order_id,
+
+    ```sql
+    SELECT
+    order_id,
     order_date,
     'Active' AS status
 
@@ -303,7 +284,7 @@
 
     UNION
 
-    SELECT 
+    SELECT
     	order_id,
         order_date,
         'Archived' AS status
@@ -311,12 +292,13 @@
     FROM orders
     WHERE order_date < '2019-01-01'
     ```
+
     Note: The number of columns rendered by individual queries, being UNIONed together, should be equal else SQL will throw an error.
 
-    ```
-    -- Exercise Question Solution
+    ```sql
+    -- Example
     SELECT
-	    customer_id,
+        customer_id,
         first_name,
         points,
         'Bronze' AS type
@@ -348,11 +330,12 @@
     ```
 
 ## Inserting, Updating, and Deleting Data
-- - - 
-28. **Insertion of Row in a Table:** 
-    ```
+
+28. **Insertion of Row in a Table:**
+
+    ```sql
     INSERT INTO customers (
-	    first_name,
+        first_name,
         last_name,
         birth_date,
         address,
@@ -366,26 +349,28 @@
         'Some city',
         'CA')
     ```
+
     In the code above, we have mentioned the columns we're explicitly specifying the values for. The order in which we list out the columns doesn't matter but the order of values should follow the same order as the column names.
 
     We can choose to not mention these columns and fill-in the values in the same order as in the schema and supply values like **DEFAULT**, **NULL** to let SQL populate those column values with the default or null values respectively.
 
-29. **Insertion of Multiple Rows in a Table:** 
-    ```
+29. **Insertion of Multiple Rows in a Table:**
+    ```sql
     INSERT INTO products (
-	    name,
+        name,
         quantity_in_stock,
         unit_price
         )
-    VALUES 
+    VALUES
     	('Product1', 10, 1.5),
     	('Product2', 20, 2.5),
         ('Product3', 30, 3.5)
     ```
-30. **Inserting Data Into Multiple Tables:** 
-    ```
+30. **Inserting Data Into Multiple Tables:**
+
+    ```sql
     INSERT INTO orders (
-	    customer_id,
+        customer_id,
         order_date,
         status
     )
@@ -395,103 +380,143 @@
 
     INSERT INTO order_items
     VALUES
-        (LAST_INSERT_ID(),1,1,2.95), 
+        (LAST_INSERT_ID(),1,1,2.95),
         (LAST_INSERT_ID(),2,1,3.95)
     ```
+
     **LAST_INSERT_ID** returns the ID(order_id) of the row created by the first SQL Query, insert query (in the orders table)
 
 31. **Copying Contents of a Table:** For creating the copy of a table, **CREATE TABLE** clause
-    ```
+
+    ```sql
     CREATE TABLE orders_archived AS
     SELECT * FROM orders        --> This line is a sub-query (A valid SQL query part of another SQL query)
     ```
+
     The above command DOES NOT copy the schema and its rules to the new table.
     In order to copy only a subset of rows to a new table:
-    ```
+
+    ```sql
     INSERT INTO orders_archived
     SELECT *
     FROM orders
     WHERE order_date < '2019-01-01'
     ```
-    
-    Exercise Solution:
-    ```
-    USE sql_invoicing;
-    CREATE TABLE invoices_archived AS
-    SELECT 
-    	invoice_id,
-    	number,
-        c.name AS client,
-        invoice_total,
-        payment_total,
-        due_date,
-        payment_date
-    FROM invoices i 
-    JOIN clients c
-    	USING (client_id)
-    WHERE i.payment_date IS NOT NULL
-    ```
 
 32. **Updating Row Data:** By using the **UPDATE** and **SET** clauses we can update the data of a row in a table.
-    ```
+
+    ```sql
     UPDATE invoices                  ----> UPDATE <table_name>
     SET payment_total = 10,          ----> Column Value(s) to be updated
     	payment_date = '2019-03-01'
 
     WHERE invoice_id = 1            -----> Locating the row to be updated
-    
+
     --------------------------------------------
     WHERE invoice_id IN (3,4)       -----> Updating Multiple Rows at once
     ```
-    ```
+
+    ```sql
     Using a Sub-query inside an Update Query
     USE sql_invoicing;
 
     UPDATE invoices
-    SET 
+    SET
     	payment_total = invoice_total * 0.5,
     	payment_date = due_date
     WHERE client_id IN
-    			(SELECT client_id 
+    			(SELECT client_id
     			FROM clients
     			WHERE state IN ('CA','NY'))
     ```
+
     In the above example, The Subquery inside of parenthesis is executed first by SQL Engine and Fed into the main query.
     The **IN** operator, in the **WHERE** clause signifies that the sub-query returns more than one rows.
 
 33. **DELETE clause, Deleting Rows:**
-    ```
+
+    ```sql
     DELETE FROM invoices
     WHERE invoice_id = 1
 
-    OR by using a sub-query,
+    -- OR by using a sub-query,
 
     DELETE FROM invoices
     WHERE client_id = (
-	    SELECT *
-	    FROM clients
-	    WHERE name = 'Myworks'
+        SELECT *                --
+        FROM clients            -- Sub-Query
+        WHERE name = 'Myworks'  --
     )
     ```
+
 34. **Summarizing Data:**
-    Built-in ***Aggregation Functions***: **MAX(), MIN(), SUM(), AVG(), SUM(), COUNT()**
-    ```
-    SELECT 
-	    MAX(invoice_total) AS highest,   ----> Returns the Highest Value 
+    Built-in **_Aggregation Functions_**: **MAX(), MIN(), SUM(), AVG(), SUM(), COUNT()**
+
+    ```sql
+    SELECT
+        MAX(invoice_total) AS highest,   ----> Returns the Highest Value
         MIN(invoice_total) AS lowest,   ----> Returns the Lowest Value
         AVG(invoice_total) AS average,  ----> Returns the Average Value
-        
+
         SUM(invoice_total * 1.1) AS total,----> Returns the Total Value with 1.1 multiplied in each entry
-        
+
         COUNT(invoice_total) AS number_of_invoices, ---> Returns no. of entries
         COUNT(payment_date) AS count_of_payments,
 
         COUNT(*) AS total_records,  ---> Returns total no. of records in the table
-        
+
         COUNT(DISTINCT client_id) AS unique_records  --> Returns number of unique values in the given column (client_id) in this case
 
     FROM invoices
     WHERE invoice_date > '2019-07-01'               ---> Filter
     ```
-     
-        
+
+    **NOTE:** If we perform **MAX** operation on a **DATE** value it'll return the latest (or most recent) entry.
+
+35. **GROUP BY** - Can be used to group data as per particular columns.
+    The following example groups **total_payments** on dates and the respective payment method for each date.
+
+    ```sql
+    SELECT
+        date,
+        pm.name AS payment_method,
+        SUM(amount) AS total_payments
+    FROM payments p
+    JOIN payment_methods pm
+    	ON p.payment_method = pm.payment_method_id
+    GROUP BY date, pm.payment_method_id
+    ORDER BY date
+    ```
+
+36. **HAVING** - It is used to filter the data **_AFTER_** the rows are grouped (using **GROUP BY**), whereas **WHERE** is used **_BEFORE_** the rows are grouped.
+
+    ```sql
+    SELECT
+        client_id,
+        SUM(invoice_total) AS total_sales,
+        COUNT(*) AS number_of_invoices
+    FROM invoices
+    GROUP BY client_id
+    HAVING total_sales > 500 AND number_of_invoices > 5
+    ```
+
+    **Note:** When defining a condition in **WHERE** clause we can use columns irrespective of their presence in the **SELECT** statement. BUT in **HAVING** we can only use those columns which are mentioned in the **SELECT** statement.
+
+37. **Sub-Query** - A Sub-query or inner query is executed within another SQL query, the result of such a query further acts as an input for the main query.
+
+    ```sql
+    SELECT *
+    FROM products
+    WHERE unit_price > (
+    	SELECT unit_price       -- The sub-query returns a singular value here
+        FROM products
+        WHERE product_id = 3
+    )
+
+    SELECT *
+    FROM products
+    WHERE product_id NOT IN(
+        SELECT DISTINCT product_id  -- The sub-query returns a list of values here
+        FROM order_items
+    )
+    ```
