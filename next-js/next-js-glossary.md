@@ -244,3 +244,211 @@ export default AddToCart;
     <table className="table table-bordered"></table>
     <button className="btn btn-primary"></button>
     ```
+
+### Routing & Navigation
+
+15. **Special Files**: NextJS provides special files that can be used to customize the behavior of the application. These files are:
+
+    - **_page.tsx_** - To make a route publically accessible in NextJS router. (Only this file in the folder is accessible publically).
+
+    - **_layout.tsx_**: To define common layouts for the pages.
+
+    - **_loading.tsx_**: To show Loading UIs.
+
+    - **_route.tsx_**: To create APIs.
+
+    - **_not-found.tsx_**: To show custom errors.
+
+    - **_error.tsx_**: To show general error pages.
+
+    > Note: While defining re-usable components, place components in the components folder (app/components) if they are intended for use across multiple routes OR co-locate components within the specific route folder (e.g., app/users) if their usage is limited to that particular route.
+
+16. **Dynamic Routes**: It's a route with a parameter. For example, a route like **/users/1** where **1** is the parameter.
+
+- To create a dynamic route in NextJS, we create a folder with the name of the route and add a **[id].tsx** file (here "id" can be replaced with any other slug name in camel case). At file system level, it'll look like: **`users/[id]/page.tsx`**.
+- In order to make a route **_accept varying number of parameters_**, we can prefix the slug name with **"..."** in the folder name. For example, **[...id].tsx**. This is called **[Catch-All Segments](https://nextjs.org/docs/pages/building-your-application/routing/dynamic-routes#catch-all-segments)**, to catch all subsequent segments in the URL.
+
+- In order to make the **_number of params optional_**, we can use **"[]"** in the slug name. For example, **[[...id]].tsx**. By doing this, the route will accept 0 or more parameters.
+
+  ```tsx
+  import React from 'react';
+
+  // if [id] is the slug
+  interface Props {
+    params: {
+      id: number; // id accepts only 1 parameter (Ex: /users/1)
+    };
+  }
+
+  // if [...id] is the slug
+  interface Props {
+    params: {
+      id: string[]; // id is an array of strings since it accepts multiple parameters (Ex: /users/1/2/3)
+    };
+  }
+
+  // in case of query string param
+  interface Props {
+    params: {
+      id: string[]; // id is an array of strings since it accepts multiple parameters (Ex: /users/1/2/3)
+    };
+    searchParams: {
+      sampleQueryVar: string; // query string param
+    };
+  }
+
+  const UserDetailPage = ({
+    params: { id },
+    searchParams: { sampleQueryVar }
+  }: Props) => {
+    return <div>UserDetailPage {id}</div>;
+  };
+
+  export default UserDetailPage;
+  ```
+
+  > Note: NextJS automatically passes a `params` and `searchParams` objects to the component ([id]/page.tsx) with the dynamic route parameter ("id" in the above example) and query string param slug (sampleQueryVar in the above example) (`/users?sampleQueryVar=registered`) respectively.
+
+17. **Layouts**: Layouts are used to define UIs that are shared among different pages. In NextJS, we can create a **_layout.tsx_** file in the **_app_** folder to define a common layout for all the pages. For example, the layout.tsx file in the root of **app** folder defines the **_common UI for all the pages_** in the application. A layout component should have children of type **ReactNode**.
+
+    Example:
+
+    ```jsx
+    export default function RootLayout({
+      children
+    }: {
+      children: React.ReactNode
+    }) {
+      return (
+        <html data-theme="winter" lang="en">
+          <body className={inter.className}>
+            <NavBar />
+            <main className="p-5">{children}</main>
+          </body>
+        </html>
+      );
+    }
+    ```
+
+18. **Navigation using the Link Component**: There are multiple advantages of using the `<Link>` component:
+
+- Link only downloads the content of the target page and not the entire page.
+- Link pre-fetches the content of the target page that are in the viewport.
+- Caches the content of the target page for faster navigation. This client-side cache is temporary and lasts only for the current session, meaning it is cleared as soon as a full-page reload is performed.
+
+19. **Programmatic Navigation**: We can navigate programmatically using the **useRouter** hook provided by NextJS. This gives us access to the **AppRouterInstance** object which has methods like **push**, **replace**, **back**, **forward**, **reload** etc.
+
+    ```tsx
+    import { useRouter } from 'next/navigation';
+
+    const NewUserPage = () => {
+      const router = useRouter();
+
+      return (
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            // Push is used to go to a new page and save the current page in the history
+            router.push('/users');
+          }}
+        >
+          Create
+        </button>
+      );
+    };
+
+    export default NewUserPage;
+    ```
+
+20. **Showing Loading UI**: In React 18, we get the `<Suspense>` Component which can be used to show a loading UI (aka `fallback UI`) while the data is being fetched.
+
+    ```tsx
+    const UsersPage = async ({ searchParams: { sortBy } }: Props) => {
+      return (
+        <>
+          <h1>Users</h1>
+          <Link href="/users/new" className="btn">
+            New User
+          </Link>
+          <Suspense fallback={<p>Loading...</p>}>
+            <UserTable sortOrder={sortBy} />
+          </Suspense>
+        </>
+      );
+
+    export default UsersPage;
+    ```
+
+    We can use the same suspense component to show a loading UI when switching between pages by adding it to the root layout:
+
+    ```jsx
+    export default function RootLayout({
+      children
+    }: {
+      children: React.ReactNode
+    }) {
+      return (
+        <html data-theme="winter" lang="en">
+          <body className={inter.className}>
+            <NavBar />
+            <main className="p-5">
+              <Suspense fallback={<p>Loading...</p>}>{children}</Suspense>
+            </main>
+          </body>
+        </html>
+      );
+    }
+    ```
+
+    Alternatively, we can also define a **_`loading.tsx`_** file in the root of the app folder to define the UI of the loading screen between pages (home, users etc).
+    Loading.tsx:
+
+    ```tsx
+    import React from 'react';
+    const loading = () => {
+      return <span className="loading loading-spinner loading-md"></span>;
+    };
+    export default loading;
+    ```
+
+    > Note: To simulate a loading screen, in the Chrome dev tools we can select the Suspense Component in the Components tab and toggle the stopwatch icon to Suspend the Suspense component.
+
+21. **Not-Found Page**: We can use another special file called **`not-found.tsx`** to define the layout of a page to display when a resource is not found. Similar to other special files, we can define a global not-found file at the root of the app folder which will be displayed if no route specific not-found file is defined.
+
+    Example when a user doesn't exist we can define a not-found file in `users/[id]` folder:
+
+    ```tsx
+    import React from 'react';
+    const UserNotFoundPage = () => {
+      return <div>This User doesn't exist.</div>;
+    };
+    export default UserNotFoundPage;
+    ```
+
+22. **Handling Unexpected Errors**: In special files we have global-error.tsx and error.tsx files to handle errors at the app level and route level respectively.
+
+    Example of `error.tsx`:
+
+    ```tsx
+    'use client';
+    import React from 'react';
+
+    interface Props {
+      error: Error; // Error object passed (by NextJS)
+      reset: () => void; // Reset button to retry the errored route (by NextJS)
+    }
+
+    const ErrorPage = ({ error, reset }: Props) => {
+      console.log('Error: ', error);
+      return (
+        <>
+          <div>An unexpected error has occurred.</div>
+          <button className="btn" onClick={() => reset()}>
+            Retry
+          </button>
+        </>
+      );
+    };
+
+    export default ErrorPage;
+    ```
