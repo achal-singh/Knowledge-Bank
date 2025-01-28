@@ -59,38 +59,38 @@
 Instead of converting the entire Product Card component to a client component, we can convert only the **Add to Cart** button to a client component. This way, the button will be rendered on the server, and the client-side JavaScript will be executed only when the button is clicked.
 
 ```tsx
-import React from 'react';
-import AddToCart from './AddToCart';
+import React from 'react'
+import AddToCart from './AddToCart'
 
 const ProductCard = () => {
   return (
     <div>
       <AddToCart />
     </div>
-  );
-};
+  )
+}
 
-export default ProductCard;
+export default ProductCard
 
 /* AddToCart.tsx */
-('use client');
-import React from 'react';
+;('use client')
+import React from 'react'
 
 const AddToCart = () => {
   return (
     <div>
       <button
         onClick={() => {
-          console.log('Added to Cart!');
+          console.log('Added to Cart!')
         }}
       >
         Add to cart
       </button>
     </div>
-  );
-};
+  )
+}
 
-export default AddToCart;
+export default AddToCart
 ```
 
 8. **Data Fetching**: In NextJS data fetching can be performed either on the **Server** or on the **Client** side. On client side we use hooks such as **useEffect** (to fetch data from the backend) and **useState** (to update state variables).
@@ -98,16 +98,16 @@ export default AddToCart;
    A sample of data fetching on server side looks like this:
 
    ```tsx
-   import React from 'react';
+   import React from 'react'
 
    interface User {
-     id: number;
-     name: string;
+     id: number
+     name: string
    }
 
    const UsersPage = async () => {
-     const res = await fetch('https://jsonplaceholder.typicode.com/users');
-     const users: User[] = await res.json();
+     const res = await fetch('https://jsonplaceholder.typicode.com/users')
+     const users: User[] = await res.json()
 
      return (
        <>
@@ -118,10 +118,10 @@ export default AddToCart;
            ))}
          </ul>
        </>
-     );
-   };
+     )
+   }
 
-   export default UsersPage;
+   export default UsersPage
    ```
 
    > Note: It's recommended to fetch data on the server side for better SEO and performance.
@@ -134,8 +134,8 @@ export default AddToCart;
    export async function getStaticProps() {
      const res = await fetch('https://jsonplaceholder.typicode.com/users', {
        cache: 'no-store'
-     });
-     const users = await res.json();
+     })
+     const users = await res.json()
      // Rendering logic...
    }
    ```
@@ -145,7 +145,7 @@ export default AddToCart;
    ```tsx
    const res = await fetch('https://jsonplaceholder.typicode.com/users', {
      next: { revalidate: 10 }
-   });
+   })
    ```
 
    > Note: The cache is only available with the fetch function and not with the axios or any other library.
@@ -162,12 +162,12 @@ export default AddToCart;
 
     ```tsx
     // Static (cache enabled by default)
-    const res = await fetch('https://jsonplaceholder.typicode.com/users');
+    const res = await fetch('https://jsonplaceholder.typicode.com/users')
 
     // Dynamic (caching disabled)
     const res = await fetch('https://jsonplaceholder.typicode.com/users', {
       cache: 'no-store'
-    });
+    })
     ```
 
 ### Styling
@@ -271,40 +271,40 @@ export default AddToCart;
 - In order to make the **_number of params optional_**, we can use **"[]"** in the slug name. For example, **[[...id]].tsx**. By doing this, the route will accept 0 or more parameters.
 
   ```tsx
-  import React from 'react';
+  import React from 'react'
 
   // if [id] is the slug
   interface Props {
     params: {
-      id: number; // id accepts only 1 parameter (Ex: /users/1)
-    };
+      id: number // id accepts only 1 parameter (Ex: /users/1)
+    }
   }
 
   // if [...id] is the slug
   interface Props {
     params: {
-      id: string[]; // id is an array of strings since it accepts multiple parameters (Ex: /users/1/2/3)
-    };
+      id: string[] // id is an array of strings since it accepts multiple parameters (Ex: /users/1/2/3)
+    }
   }
 
   // in case of query string param
   interface Props {
     params: {
-      id: string[]; // id is an array of strings since it accepts multiple parameters (Ex: /users/1/2/3)
-    };
+      id: string[] // id is an array of strings since it accepts multiple parameters (Ex: /users/1/2/3)
+    }
     searchParams: {
-      sampleQueryVar: string; // query string param
-    };
+      sampleQueryVar: string // query string param
+    }
   }
 
   const UserDetailPage = ({
     params: { id },
     searchParams: { sampleQueryVar }
   }: Props) => {
-    return <div>UserDetailPage {id}</div>;
-  };
+    return <div>UserDetailPage {id}</div>
+  }
 
-  export default UserDetailPage;
+  export default UserDetailPage
   ```
 
   > Note: NextJS automatically passes a `params` and `searchParams` objects to the component ([id]/page.tsx) with the dynamic route parameter ("id" in the above example) and query string param slug (sampleQueryVar in the above example) (`/users?sampleQueryVar=registered`) respectively.
@@ -326,7 +326,7 @@ export default AddToCart;
             <main className="p-5">{children}</main>
           </body>
         </html>
-      );
+      )
     }
     ```
 
@@ -339,25 +339,25 @@ export default AddToCart;
 19. **Programmatic Navigation**: We can navigate programmatically using the **useRouter** hook provided by NextJS. This gives us access to the **AppRouterInstance** object which has methods like **push**, **replace**, **back**, **forward**, **reload** etc.
 
     ```tsx
-    import { useRouter } from 'next/navigation';
+    import { useRouter } from 'next/navigation'
 
     const NewUserPage = () => {
-      const router = useRouter();
+      const router = useRouter()
 
       return (
         <button
           className="btn btn-primary"
           onClick={() => {
             // Push is used to go to a new page and save the current page in the history
-            router.push('/users');
+            router.push('/users')
           }}
         >
           Create
         </button>
-      );
-    };
+      )
+    }
 
-    export default NewUserPage;
+    export default NewUserPage
     ```
 
 20. **Showing Loading UI**: In React 18, we get the `<Suspense>` Component which can be used to show a loading UI (aka `fallback UI`) while the data is being fetched.
@@ -396,7 +396,7 @@ export default AddToCart;
             </main>
           </body>
         </html>
-      );
+      )
     }
     ```
 
@@ -404,11 +404,11 @@ export default AddToCart;
     Loading.tsx:
 
     ```tsx
-    import React from 'react';
+    import React from 'react'
     const loading = () => {
-      return <span className="loading loading-spinner loading-md"></span>;
-    };
-    export default loading;
+      return <span className="loading loading-spinner loading-md"></span>
+    }
+    export default loading
     ```
 
     > Note: To simulate a loading screen, in the Chrome dev tools we can select the Suspense Component in the Components tab and toggle the stopwatch icon to Suspend the Suspense component.
@@ -418,11 +418,11 @@ export default AddToCart;
     Example when a user doesn't exist we can define a not-found file in `users/[id]` folder:
 
     ```tsx
-    import React from 'react';
+    import React from 'react'
     const UserNotFoundPage = () => {
-      return <div>This User doesn't exist.</div>;
-    };
-    export default UserNotFoundPage;
+      return <div>This User doesn't exist.</div>
+    }
+    export default UserNotFoundPage
     ```
 
 22. **Handling Unexpected Errors**: In special files we have global-error.tsx and error.tsx files to handle errors at the app level and route level respectively.
@@ -430,16 +430,16 @@ export default AddToCart;
     Example of `error.tsx`:
 
     ```tsx
-    'use client';
-    import React from 'react';
+    'use client'
+    import React from 'react'
 
     interface Props {
-      error: Error; // Error object passed (by NextJS)
-      reset: () => void; // Reset button to retry the errored route (by NextJS)
+      error: Error // Error object passed (by NextJS)
+      reset: () => void // Reset button to retry the errored route (by NextJS)
     }
 
     const ErrorPage = ({ error, reset }: Props) => {
-      console.log('Error: ', error);
+      console.log('Error: ', error)
       return (
         <>
           <div>An unexpected error has occurred.</div>
@@ -447,8 +447,113 @@ export default AddToCart;
             Retry
           </button>
         </>
-      );
-    };
+      )
+    }
 
-    export default ErrorPage;
+    export default ErrorPage
+    ```
+
+### Building APIs
+
+Similar to how we define pages in NextJS, we can define APIs by creating a folder with the name of the route and adding a route.tsx file for it, all under the **api** folder. (Ex: **`app/api/users/route.tsx`**).
+
+23. **GET route**:
+
+    ```tsx
+    // GET route at /api/users/route.tsx
+    import { NextRequest, NextResponse } from 'next/server'
+    export function GET(request: NextRequest) {
+      return NextResponse.json({ message: 'Hello, World!' })
+    }
+
+    // GET route with param
+    interface Props {
+      params: {
+        id: number
+      }
+    }
+    // GET route at /api/users/[id]/route.tsx
+    export function GET(req: NextRequest, { params: { id } }: Props) {
+      if (id > 10)
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+      return NextResponse.json({ id, name: 'Joe' })
+    }
+    ```
+
+    > Note: To prevent caching of the API response, we include the request object in the function params.
+
+24. **POST route** (Creating a new resource):
+
+    ```tsx
+    // POST route at /api/users/route.tsx
+    export async function POST(request: NextRequest) {
+      const body = await request.json()
+      if (!body.name)
+        return NextResponse.json({ error: 'Invalid Name' }, { status: 400 })
+      return NextResponse.json(
+        { message: `Hello, ${body.name}!` },
+        { status: 201 }
+      )
+    }
+    ```
+
+    > Note: We return a 201 status code to indicate that the resource has been created successfully.
+
+    25. **PUT and DELETE routes** (Updating and Deleting an existing resource):
+
+    ```tsx
+    export async function PUT(req: NextRequest, { params: { id } }: Props) {
+      const body = await req.json()
+      if (!body.name)
+        return NextResponse.json({ error: 'Invalid Name' }, { status: 400 })
+
+      if (id > 10)
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+      return NextResponse.json({ id, name: body.name })
+    }
+
+    export async function DELETE(req: NextRequest, { params: { id } }: Props) {
+      if (id > 10)
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+      return NextResponse.json({ message: 'User deleted' })
+    }
+    ```
+
+    Adding validation of request body using **`zod`** library:
+
+    ```ts
+    // defined at app/api/users/schema.ts
+    import { z } from 'zod'
+
+    const schema = z.object({
+      name: z.string().min(3)
+    })
+
+    export default schema
+
+    // Can be imported in POST and PUT route logic like this;
+    import schema from './schema'
+    const validation = schema.safeParse(body)
+    if (!validaton.success) {
+      return NextResponse.json(validation.error.errors, { status: 400 })
+    }
+    ```
+
+    ### Database Integration using Prisma
+
+25. **Initialising Prisma**: Run **`npx prisma init`** to initialise Prisma in the project. This will create a **`prisma`** folder with a **`schema.prisma`** file and a **`.env`** file with **`DATABASE_URL`** variable.
+
+- `npx prisma format`: Formats the `schema.prisma` file.
+- `npx prisma migrate dev`: Creates a new migration (along with a `migrations` folder). Prisma automatically executes the given migration into the mentioned database.
+
+27. **Prisma Client**: It's a client that can be used to interact with the database. In dev environment NextJS performs Fast Refresh for every change in the code. To prevent the creation of multiple Prisma clients, we can ensure that the client is created only once and reused across the application.
+
+    ```ts
+    import { PrismaClient } from '@prisma/client'
+    const globalForPrisma = global as unknown as { prisma: PrismaClient }
+    export const prisma = globalForPrisma.prisma || new PrismaClient()
+    if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
     ```
