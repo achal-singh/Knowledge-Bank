@@ -557,3 +557,336 @@ Similar to how we define pages in NextJS, we can define APIs by creating a folde
     export const prisma = globalForPrisma.prisma || new PrismaClient()
     if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
     ```
+
+### Authentication using NextAuth.JS
+
+28. **[OAuth using Google](https://next-auth.js.org/providers/google)**: To enable OAuth using Google, we need to create a project in the **[Google Developer Console](https://console.developers.google.com/apis/credentials)** and enable the Google OAuth API. We can then create OAuth credentials and configure the OAuth consent screen. Once the OAuth credentials (Client ID and Secret) are created, we can use them in the NextAuth configuration.
+
+    ```ts
+    // app/auth/[...nextauth].ts
+    import NextAuth from 'next-auth'
+    import GoogleProvider from 'next-auth/providers/google'
+
+    const handler = NextAuth({
+      providers: [
+        GoogleProvider({
+          clientId: process.env.GOOGLE_CLIENT_ID!,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET!
+        })
+      ]
+    })
+
+    export { handler as GET, handler as POST }
+    ```
+
+29. **Authentication Sessions**: Once a user logs in successfully NextAuth creates an Authentical Session for that user, by default the session is represented as a JSON Web Token (JWT). This token can be located in **`DevTools > Application Tab > Cookies (on the side panel)`**. This JWT is a base64 encoded JSON object that is used to authenticate the user with the user.
+
+    The JWT created by NextAuth can be seen using the following script (**_only meant for dev environment!_**)
+
+    ```ts
+    // app/auth/token/route.ts
+    import { getToken } from 'next-auth/jwt'
+    import { NextRequest, NextResponse } from 'next/server'
+
+    export async function GET(req: NextRequest) {
+      const token = await getToken({ req, secret: process.env.JWT_SECRET! })
+      return NextResponse.json(token)
+    }
+    ```
+
+30. **Accessing Sessions on the Client**: Since client components allow for interactivity, we can create a wrapper around **next-auth's `SessionProvider`** component. The wrapper can look like this:
+
+    ```ts
+    'use client'
+
+    import React, { ReactNode } from 'react'
+    import { SessionProvider } from 'next-auth/react'
+
+    const AuthProvider = ({ children }: { children: ReactNode }) => {
+      return <SessionProvider>{children}</SessionProvider>
+    }
+
+    export default AuthProvider
+    ```
+
+    The wrapper above can be imported directly in the root layout like this:
+
+    ```tsx
+    export default function RootLayout({
+      children
+    }: {
+      children: React.ReactNode
+    }) {
+      return (
+        <html data-theme="winter" lang="en">
+          <body className={inter.className}>
+            <AuthProvider>
+              <NavBar />
+              <main className="p-5">{children}</main>
+            </AuthProvider>
+          </body>
+        </html>
+      )
+    }
+    ```
+
+    The **`SessionProvider`** component provides a **`session`** object that contains the user's session information, the same is passed down to its children components using [**Prop Drilling by React**](https://react.dev/learn/passing-data-deeply-with-context). The session object can be accessed in any child component like this:
+
+    ```tsx
+    'use client'
+
+    import { useSession } from 'next-auth/react'
+    import Link from 'next/link'
+    import React from 'react'
+
+    const NavBar = () => {
+      const { status, data: session } = useSession()
+
+      return (
+        <div className="flex bg-slate-200 p-5 space-x-5">
+          <Link href="/" className="mr-5">
+            Next.JS
+          </Link>
+          <Link href="/users" className="mr-5">
+            Users
+          </Link>
+          {status === 'authenticated' && <div>{session.user!.name}</div>}
+          {status === 'unauthenticated' && (
+            <Link href="/api/auth/signin">Login</Link>
+          )}
+        </div>
+      )
+    }
+
+    export default NavBar
+    ```
+
+31. **Accessing Auth Session on the Server**: We can use next-auth's **`getServerSession`** function to fetch a user's credentials by supplying the auth provider's credentials (as shown in #28) as the argument.
+
+    ```tsx
+    export default async function Home() {
+      const session = await getServerSession(authOptions)
+      return (
+        <main>
+          <h1>Hello {session && <span>{session.user!.name}</span>} </h1>
+          <Link href="/users">Users</Link>
+          <ProductCard />
+        </main>
+      )
+    }
+    ```
+
+32. **Signing Out Users**: We can leverage the **`api/auth/signout`** exposed by next-auth to sign out users.
+
+    ```tsx
+    {
+      status === 'authenticated' && (
+        <div>
+          {session.user!.name}
+          {
+            <Link href="/api/auth/signout" className="ml-3">
+              Sign Out
+            </Link>
+          }
+        </div>
+      )
+    }
+    ```
+
+    Once signed out, the **`next-auth.session-token`** is removed from the Cookies of the browser.
+
+33. **Middleware**: A middleware can be configured in the Next JS application by creating a **`middleware.ts`** file and its logic looks like this:
+
+    ```ts
+    import { NextRequest, NextResponse } from 'next/server'
+
+    export function middleware(req: NextRequest) {
+      return NextResponse.redirect(new URL('/new-page', req.url))
+    }
+
+    export const config = {
+      // ?: zero or one
+      // +: one or more
+      // *: zero or more
+      matcher: ['/users/:id*']
+    }
+    ```
+
+    In the above snippet, the middleware is configured to redirect the user to a new page when the user visits the **`/users/:id*`** route. The matcher can be configured to match multiple routes.
+
+    However, while using `next-auth`, one can use its built-in middleware to protect routes. The middleware can be configured like this:
+
+    ```ts
+    export { default } from 'next-auth/middleware'
+
+    export const config = {
+      // ?: zero or one params
+      // +: one or more params
+      // *: zero or more params
+      matcher: ['/users/:id*']
+    }
+    ```
+
+34. **Database Adapters**: Database Adapters allow the NextJS serves as a layer of abstraction between your application logic and the underlying database.
+
+    - The prisma adapter can be installed using" **`npm i @next-auth/prisma-adapter`**.
+
+    - In order to automatically store the login data from Google's OAuth login we can simply copy paste [**the schema definition from Auth.js doc**](https://authjs.dev/getting-started/adapters/prisma?framework=next-js#naming-conventions).
+
+    - In `/auth/[...nextauth]/route.tsx` we add **`adapter: PrismaAdapter(prisma)`** in the **authOptions**.
+
+- After using DB adapters NextJS changes the session strategy to database from social-login/OAuth providers. To set the session strategy back to `'jwt'` (by social login), we set the session property in the **`authOptions`**:
+
+  ```ts
+  export const authOptions: NextAuthOptions = {
+    adapter: PrismaAdapter(prisma),
+    providers: [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!
+      })
+    ],
+    session: {
+      strategy: 'jwt' // or can be set to 'database'
+    }
+  }
+  ```
+
+  After setting this, the **`users`** table get populated with the name and email of the user and the **`accounts`** table stores the provider (google in this case) and jwt token details.
+
+35. **Implementing Credential Login (Username/Password)**: We can provision email/username and password based authentication as well. To add this, the Credentials provider can be added to the authOptions [**as explained in the Auth.js doc**](https://authjs.dev/getting-started/providers/credentials?framework=next-js#configuration).
+
+    The final implementation of `Credentials` and its **`authorize`** method looks like this:
+
+    ```ts
+    Credentials({
+      credentials: {
+        email: { label: 'Email', type: 'email', placeholder: 'Email' },
+        password: { label: 'Password', type: 'password' }
+      },
+      async authorize(credentials, req) {
+        if (!credentials?.email || !credentials.password) return null
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        })
+        if (!user) return null
+        const passwordsMatch = await compare(
+          credentials.password,
+          user.hashedPassword!
+        )
+        return passwordsMatch ? user : null
+      }
+    }),
+    ```
+
+36. **Registering User**: We must add a register route to support the credential-based authorization of a user. The following route logic can be added to **`app/api/register/route.ts`**:
+
+    ```ts
+    import { z } from 'zod'
+    import { hash } from 'bcrypt'
+    import { prisma } from '@/prisma/client'
+    import { NextRequest, NextResponse } from 'next/server'
+
+    const schema = z.object({
+      email: z.string().email(),
+      password: z.string().min(5)
+    })
+
+    export async function POST(request: NextRequest) {
+      const body = await request.json()
+      const validation = schema.safeParse(body)
+      if (!validation.success)
+        return NextResponse.json(validation.error.errors, { status: 400 })
+
+      const user = await prisma.user.findUnique({
+        where: { email: body.email }
+      })
+      if (user)
+        return NextResponse.json(
+          { error: 'User already exists.' },
+          { status: 400 }
+        )
+
+      const hashedPassword = await hash(body.password, 10)
+      const newUser = await prisma.user.create({
+        data: {
+          email: body.email,
+          hashedPassword
+        }
+      })
+      return NextResponse.json({ email: newUser.email })
+    }
+    ```
+
+    > Additional References: [**Implementing Custom Sign-In/Out pages**](https://authjs.dev/guides/pages/signin?framework=next-js)
+
+### Sending Emails
+
+37. **Setting up [React Email](https://react.email/docs/introduction)**: Create a separate folder named `emails` in the root of the applciation and create a `WelcomeTemplate.tsx` file and populate it with the following code:
+
+    ```tsx
+    import React from 'react'
+    import {
+      Html,
+      Body,
+      Container,
+      Text,
+      Link,
+      Preview
+    } from '@react-email/components'
+
+    const WelcomeTemplate = ({ name }: { name: string }) => {
+      return (
+        <Html>
+          <Preview>Welcome User!</Preview>
+          <Body>
+            <Container>
+              <Text>Hello {name}!</Text>
+              <Link href="https://Google.com">Google</Link>
+            </Container>
+          </Body>
+        </Html>
+      )
+    }
+
+    export default WelcomeTemplate
+    ```
+
+    > Note: On running the command: `email dev -p 3030` which launches the local development environment for React Email, where you can preview and test email templates on http://localhost:3030. In order to ignore files created by react-email, add `.react-email/` to `.gitignore`.
+
+38. **Styling Emails**: The email can be styled using Tailwind classes, available within the react module.
+
+    ```tsx
+    import { Tailwind } from '@react-email/components'
+    const WelcomeTemplate = ({ name }: { name: string }) => {
+      return (
+        <Html>
+          <Preview>Welcome User!</Preview>
+          <Tailwind>
+            <Body className="bg-white">
+              <Container>
+                <Text className="font-bold text-2xl">Hello {name}!</Text>
+                <Link href="https://Google.com">Google</Link>
+              </Container>
+            </Body>
+          </Tailwind>
+        </Html>
+      )
+    }
+    ```
+
+39. **Sending Emails using [Resend](https://react.email/docs/integrations/resend)**: After generating the API Key for resend. The following code can be called to send an email. In this we reference the `WelcomeTemplate` component and pass the `name` prop to it.
+
+    ```ts
+    import { Resend } from 'resend'
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    import WelcomeTemplate from '@/emails/WelcomeTemplate'
+
+    await resend.emails.send({
+      from: 'sample@mydomain.com', // make sure you own this domain
+      to: 'another@gmail.com',
+      subject: 'Hello World',
+      html: '<p>Congrats on sending your <strong>first email</strong>!</p>',
+      react: <WelcomeTemplate name="Achal" />
+    })
+    ```
