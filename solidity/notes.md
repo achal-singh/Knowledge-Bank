@@ -1,4 +1,7 @@
-# Solidity Basics
+<p align="center">
+  <a href="#"><img src="https://skillicons.dev/icons?i=solidity" alt="solidity" /></a>
+</p> 
+<h1 align="center">Solidity Basics</h1>
 
 ### Value Types
 
@@ -28,8 +31,15 @@ function (<parameter types>) {public|private|internal|external} [pure|view|payab
 
 - `public`: visible externally and internally (creates a getter function for storage/state variables).
 - `private`: only visible in the current contract.
-- `external`: only visible externally (only for functions) - i.e. can only be message-called (via this.func).
+- `external`: only visible externally (only for functions) - i.e. can only be message-called (via this.func). External function calls are better for passing bigger
 - `internal` : only visible internally. Internal variables and functions are accessible in the current and child classes
+
+**Notes:**
+
+- In solidity, "message call(ed)" refers any interaction between contracts (or an EOA and a contract) that goes through the ABI.
+  Rule of thumb
+- **External** entry points, like an EOA calling an **`external`** use `calldata` by default for reference types; switch to memory only if you need mutability.
+- **Internal/public** helpers use **`memory`** (or calldata for internal if you design them to be read-only).
 
 **Other Keywords**:
 
@@ -51,11 +61,120 @@ Person public pat = Person({favoriteNumber: 7, name: "Pal" });
 Person public pat = Person(7, "Pal");
 ```
 
-### Data Locations => `calldata` vs `memory` vs `storage`
+### Data Locations: `calldata` vs `memory` vs `storage`
 
-- `calldata` and `memory`are used define temporary variables in function params. While `memory` can be re-assigned or changed inside the function definition, `calldata` cannot be changed. While using solidity's primtive types (like `uint`) as function params they're automatically assigned as `memory` type, however for special types in solidity like Arrays, Structs and Mapping we need to explicitly mention the data location: `memory`. Since `string` is basically an array of `bytes`, that's why they need to be used with the `memory` keyword.
+- `calldata` and `memory` are used to define temporary variables in function params. While `memory` can be re-assigned or changed inside the function definition, `calldata` cannot be changed. While using solidity's primtive types (like `uint`) as function params they're automatically assigned as `memory` type, however for special types in solidity like Arrays, Structs and Mapping we need to explicitly mention the data location: `memory`. Since `string` is basically an array of `bytes`, that's why they need to be used with the `memory` keyword.
+
+> NOTE: Since **Arrays**, **Strings (array of bytes)**, **Structs** and **Mappings** are all reference types and not value types, we need to tell the Solidity compiler where these reference types (or pointers) are pointing to, whether it's present in **`memory`**, **`storage`** or **`calldata`**. Reference types can be defined in any of these memory locations.
 
 - `storage` is a keyword used to define permanent variables. Defined outside of the function, in the Contract's scope as a state variable.
+
+### How function execution takes place for different modifiers:
+
+**I. Public**
+
+- **With value (primitive) types**:
+  - External call: arguments decoded from calldata → pushed onto stack.
+  - Internal call: arguments passed directly on stack.
+  - ✅ No data location keywords needed.
+
+```solidity
+function foo(uint256 x, address y) public returns (uint256) {
+    return x + 1;
+}
+```
+
+- **With reference types (array, bytes, string, struct)**:
+  Must declare as memory (compiler error if you try calldata or storage).
+  **_storage_** param can be passed in case of `internal` though:
+
+  ```solidity
+  uint256[] nums;
+
+  function foo(uint256[] storage arr) internal view returns (uint256) {
+  return arr[0];
+  }
+
+  function bar() public view returns (uint256) {
+  return foo(nums); // nums is a storage variable
+  }
+  ```
+
+- Call flows:
+  - External call → calldata input
+    - ABI decoder copies calldata → memory (full copy).
+    - Function then works with memory array (mutable).
+    - Path: calldata → memory → stack
+  - Internal call → memory input
+    - Compiler passes pointer to memory directly.
+    - ✅ No copy.
+    - Path: memory → stack
+
+```solidity
+function foo(uint256[] memory arr) public returns (uint256) {
+    return arr[0];
+}
+```
+
+**II. External**
+
+- The ABI decoder must decode **`calldata`** and copy everything into **`memory`** before your function body runs.
+
+```solidity
+  function foo(uint256[] memory arr) external {
+      arr[0] = 42; // mutation allowed since it is memory
+  }
+  // PATH: calldata → decoded → memory → stack
+```
+
+- Solidity **_does not copy_** into memory. Instead, it just sets up a pointer into calldata (offset + length).
+
+```solidity
+function foo(uint256[] calldata arr) external returns (uint256) {
+    return arr[0]; // read directly from calldata
+}
+// No memory copy → cheaper, but immutable.
+// PATH: calldata → read in-place → stack
+```
+
+**III. Internal**
+
+- **Internal function with _`memory`_ parameter**:
+  - Caller passes a **memory** array:
+    - Compiler just passes a pointer (base + length) to the memory area.
+    - ✅ No copy.
+    - Reads/writes go directly to memory.
+    - Call path: `memory → stack`.
+  - Caller passes a **calldata** array:
+    - Compiler must copy calldata → memory before the call.
+    - Because the function expects mutable memory.
+    - Call path: `calldata → decoded/copy → memory → stack`.
+
+```solidity
+function foo(uint256[] memory arr) internal pure returns (uint256) {
+    return arr[0];
+}
+```
+
+- **Internal function with _`calldata`_ parameter**:
+
+  - Caller passes a **_calldata_** array:
+
+    - Compiler forwards a pointer (offset + length) into calldata.
+    - ✅ No copy.
+    - Reads come directly from calldata.
+    - Call path: calldata → stack
+
+  - Caller passes a **_memory_** array:
+    - ❌ Not allowed.
+    - `Compile-time error`: “Type uint256[] memory is not implicitly convertible to expected type uint256[] calldata.”
+    - Because calldata is read-only input, you cannot synthesize it from memory.
+
+```solidity
+function foo(uint256[] calldata arr) internal pure returns (uint256) {
+    return arr[0];
+}
+```
 
 ### Inheritance
 
@@ -87,7 +206,7 @@ contract SimpleStorage {
 
     mapping(string => uint) public nameToFavNum;
 
-    function store(uint _myFavNum) public virtual virtual {
+    function store(uint _myFavNum) public virtual {
         myFavNum = _myFavNum;
     }
 
@@ -143,6 +262,10 @@ contract StorageFactory {
     }
 }
 ```
+
+#### Constructor Chaining
+
+If a contract is inheriting from a contract which has a constructor with a
 
 ### Interface
 
@@ -280,13 +403,13 @@ contract SafeMathTest {
 
 On calling add function, bigNum would get reset to 0 and this behavior was kept in check by using SafeMath library. But on trying to do the same in solidity versions >= 0.8.0, the function call would return an error, hence we don't need to use SafeMath.
 
-> **Note:** In order to execute the reset behavior in solidity versions >=0.8.0 we can wrap the statement in the **`unchecked`** keyword, **`unchecked { bigNum = bigNum + 1; }`**.
+> **Note:** In order to execute the reset behavior (due to overflow) in solidity versions >=0.8.0 we can wrap the statement in the **`unchecked`** keyword, **`unchecked { bigNum = bigNum + 1; }`**.
 
 > The **_unchecked_** keyword allows developers to bypass built-in overflow checks, potentially improving gas efficiency but increasing the risk of errors.
 
 > Another use of the **_new_** keyword: To reset an array: `funders = new address[](0);`
 
-### Sending funds from Contract
+### Sending funds from Contract: transfer vs send
 
 There are 3 ways of sending native funds from a contract:
 
@@ -305,7 +428,7 @@ require(sendSuccess, "Send failed"):
 // `call` function allows us to call any function without even having its ABI.
 // Sends all the gas.
 // The empty quotes at the end hold the logic for calling a function, its left empty since we're only transfering ETH. It returns two values, boolean, which returns if the call succeeded and bytes which holds the return value from the function (if any).
-(bool callSuccess, bytes memory dataReturned ) = payable(msg.sender).call{value: address(this).balance}("")
+(bool callSuccess, bytes memory dataReturned ) = payable(msg.sender).call{value: address(this).balance}(abi.encodeWithSignature("functionName(type1,type2)", arg1, arg2))
 require(callSuccess, "call failed"):
 ```
 
@@ -348,7 +471,7 @@ modifier onlyOwner() {
 }
 ```
 
-> **_Gas Optimisation notes_**:
+### Gas Optimisation notes
 
 1. Using the **_constant_** keyword: Variables that are given a fixed value at their definition itself should be defined as a constant for lower gas costs. They're written in uppercase.
 
@@ -364,17 +487,21 @@ address public immutable i_owner;
 3. **Using custom errors instead of strings in require statements**: These custom errors are defined outside the contract body.
    Custom errors can also hold arguments, for example: `error ExceedsMaxLimit(uint256 maxAllowed);`
 
+   > Also, it is recommended to name errors with their contract name in prefix followed by 2 underscores and then the error name , like this: `error ContractName__ErrorName`.
+
 ```solidity
-error NotOwner();
+error FundMe__NotOwner(); // Needs solidity >= 0.8.26
 
 contract FundMe {
   modifier onlyOwner() {
-    // require(msg.sender == i_owner, NotOwner() );   // can also be used inside require
-    if (msg.sender != i_owner) { revert NotOwner(); }
+    // require(msg.sender == i_owner, NotOwner() );   // can also be used inside require. This is less gas efficient than the if statement below.
+    if (msg.sender != i_owner) { revert FundMe__NotOwner(); }
     _;
   }
 }
 ```
+
+4. **Use private visibility for storage variables**: Storage variables should be defined as **`private`** unless they need to be public. By doing this, Solidity does not automatically create a public getter function, which helps prevent an increase in the contract’s bytecode size.
 
 ### receive() vs fallback()
 
@@ -392,7 +519,7 @@ pragma solidity ^0.8.2;
 
 import { PriceConverter } from "./PriceConverter.sol";
 
-error NotOwner();
+error FundMe__NotOwner();
 
 contract FundMe {
     address[] public funders;
@@ -423,8 +550,8 @@ contract FundMe {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == i_owner, NotOwner() );
-        if (msg.sender != i_owner) { revert NotOwner(); }
+        require(msg.sender == i_owner, FundMe__NotOwner() );
+        if (msg.sender != i_owner) { revert FundMe__NotOwner(); }
         _;
     }
 
@@ -437,3 +564,60 @@ contract FundMe {
     }
 }
 ```
+
+### Call Value Syntax in Solidity
+
+In solidity if we wish to send some ETH to a payable function we can simply write it as:
+
+```solidity
+contractInstance.functionName{value: amount, gas: gasAmount}(arguments);
+```
+
+## Order of Layout
+
+### Contract Elements
+
+- `pragma` statement
+- `import` statements
+- Interfaces
+- Libraries
+- Contracts
+
+### Inside the contract
+
+- Type declarations
+- State variables
+- Events
+- Modifiers
+- Functions
+
+### Function ordering conventions
+
+A general convention to order function definitions within a solidity contract is as follows:
+
+- constructor
+- receive (if exists)
+- fallback (if exists)
+- external
+- public
+- internal
+- private
+
+## Events
+
+Events are pieces of information that report an essential change of state in a Smart Contract transaction. These are not stored inside the contract’s storage/state (which costs a lot of gas). Instead, when you emit an event, the data goes into the transaction logging data structure of the EVM (entirely separate from the Contract's storage).
+
+> **Advantages of events**:
+>
+> 1. Using events its easier to query the history of events to reconstruct states and data of say addresses or users of a smart contract which comes in handy when migrating to a newer contract. The new contract can be initialised with this constructed data.
+> 2. It's easier for frontend applciations to directly listen to such events and update the UI.
+
+They are indexed by **_topics or indexed parameters_**, so clients (like web3.js, ethers.js, The Graph, block explorers) can query/filter them efficiently. An event can have **upto 3 indexed params**. The non-indexed ones are harder to search as they get ABI-encoded, and you need to know the ABI in order to fetch them.
+
+#### Reading the Event Data from the logs
+
+When we fetch the event data from the transaction logs, we get an array of topics.
+
+- The first element of this array stores the keccak256 hash of the event signature like this: `keccak256("Transfer(address,address,uint256)")`.
+- The rest of the elements are the indexed parameters.
+- The non-indexed parameters are present in the data field of this log.
