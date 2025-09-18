@@ -16,3 +16,9 @@
 [submodule "solidity/foundry/LotteryContract/lib/chainlink-brownie-contracts"]
 	path = solidity/foundry/LotteryContract/lib/chainlink-brownie-contracts
 	url = https://github.com/smartcontractkit/chainlink-brownie-contracts
+[submodule "solidity/foundry/LotteryContract/lib/foundry-devops"]
+	path = solidity/foundry/LotteryContract/lib/foundry-devops
+	url = https://github.com/Cyfrin/foundry-devops
+[submodule "solidity/foundry/ERC20/lib/forge-std"]
+	path = solidity/foundry/ERC20/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
