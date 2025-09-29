@@ -22,3 +22,9 @@
 [submodule "solidity/foundry/ERC20/lib/forge-std"]
 	path = solidity/foundry/ERC20/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "solidity/foundry/ERC721/lib/forge-std"]
+	path = solidity/foundry/ERC721/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "solidity/foundry/ERC721/lib/foundry-devops"]
+	path = solidity/foundry/ERC721/lib/foundry-devops
+	url = https://github.com/Cyfrin/foundry-devops
