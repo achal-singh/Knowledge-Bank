@@ -17,7 +17,19 @@ The official package manager and the build system for Rust. It is used to initia
 
 ### **Macros**
 
-Functions that end with an exclamation mark (!). These functions generate code at compile time. **Example:** `println!("Howdy!)`.
+Functions that end with an exclamation mark (!). These functions generate code at compile time and prevent runtime errors. Some common macros are listed below:
+
+- **println!()** - allows printing values on the console.
+- **format!** - Brings String Interpolation in Rust (like we have `Hello ${name}` in Typescript).
+- **derive()** - #[derive(T1, T2, …)] asks the compiler (or a proc-macro) to auto-generate trait impls for your type based on its fields. You slap it on a **_struct_** or **_enum_**, and you get boilerplate implementations for free.
+  > Note: We don't need to mention the derive macro on top of a struct if the value we intend to print is of type other than Struct itself. For ex: to print a value which is of primitive type we don't need to use derive.
+  ```rust
+  #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+  struct Point {
+    x: i32,
+    y: i32,
+  }
+  ```
 
 ### **Variables**:
 
@@ -210,71 +222,71 @@ Data types that represent a single value.
 
 - **Tuple**: A data type that represents a collection of values, has fixed size and its values are known at compile-time.
 
-```rust
-let t: (bool, char, u32) = (true, 'a', 1);
-println!("{} {} {}", t.0, t.1, t.2);
-```
+  ```rust
+  let t: (bool, char, u32) = (true, 'a', 1);
+  println!("{} {} {}", t.0, t.1, t.2);
+  ```
 
-- **Empty Tuple** (a.k.a. **Unit Type**): Is used in cases where the intention is to not return anything.
+  - **Empty Tuple** (a.k.a. **Unit Type**): Is used in cases where the intention is to not return anything.
 
-```rust
-// Returning a successful (or Ok) result without any data in it.
-Result<(), String> = Ok(()) | Error("ERROR!");
-// OR a function that does nothing and returns nothing.
-fn ret_empty_tuple() -> () {}
-```
+  ```rust
+  // Returning a successful (or Ok) result without any data in it.
+  Result<(), String> = Ok(()) | Error("ERROR!");
+  // OR a function that does nothing and returns nothing.
+  fn ret_empty_tuple() -> () {}
+  ```
 
-- **Nested Tuple**: A tuple with multiple tuples of various sizes and types.
+  - **Nested Tuple**: A tuple with multiple tuples of various sizes and types.
 
-```rust
-// Note: In Rust, numeric literals (integers and floats) can have a suffix to specify their type (like 1.23f64)
-let nested = (('a', 1.23), (true, 1u32, -1i32), ())
+  ```rust
+  // Note: In Rust, numeric literals (integers and floats) can have a suffix to specify their type (like 1.23f64)
+  let nested = (('a', 1.23), (true, 1u32, -1i32), ())
 
-// Accessing elemets inside the tuple
-println!("nested.0.1: {}", (nested.0).1); // 1.23
+  // Accessing elemets inside the tuple
+  println!("nested.0.1: {}", (nested.0).1); // 1.23
 
-// Destructuring a tuple
-let t: (bool, char, u32) = (true, 'a', 1)
-let (a, b, c) = t;
-// Partial Destructuring
-let (_, b, _) = t; // ex: if we only want the second value
+  // Destructuring a tuple
+  let t: (bool, char, u32) = (true, 'a', 1)
+  let (a, b, c) = t;
+  // Partial Destructuring
+  let (_, b, _) = t; // ex: if we only want the second value
 
-fn return_many() -> (u32, bool) {
-  (100, true);
-}
-let (num, flag) = return_many();
-```
+  fn return_many() -> (u32, bool) {
+    (100, true);
+  }
+  let (num, flag) = return_many();
+  ```
 
 - **Arrays**: They're collection of elements with length known at compile-time, while **slices** are collection with length **_not known_** a compile-time.
 
-```rust
-// Array declaration [type; size]
-let arr: [u32; 3] = [1, 2, 3];
-println!("arr[0]: {}", arr[0]);
+  ```rust
+  // Array declaration [type; size]
+  let arr: [u32; 3] = [1, 2, 3];
+  println!("arr[0]: {}", arr[0]);
 
-// Length
-let len = arr.len();
-// Mutable Array
-let mut arr: [u32; 3] = [1, 2, 3];
-arr[1] = 99;
+  // Length
+  let len = arr.len();
+  // Mutable Array
+  let mut arr: [u32; 3] = [1, 2, 3];
+  arr[1] = 99;
 
-// Creates an array with 10 elements all set to 0.
-let arr: [u32; 10] = [0; 10];
-println!("arr: {:?}", arr);
+  // Creates an array with 10 elements all set to 0.
+  let arr: [u32; 10] = [0; 10];
+  println!("arr: {:?}", arr);
 
-let nums: [u32; 10] = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8];
+  let nums: [u32; 10] = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8];
 
-// SLICE
-// &[i32] means reference to an array of type i32.
-// [0..3] OR [..3] fetches the first 3 elements, excl. the element at index 3.
-let s: &[i32] = &nums[0..3]; // &nums[..3]
-// Last 3 indexes
-let s: &[i32] = &nums[7..10] // &nums[7..]
-// Middle 4 indexes
-let s: &[i32] = &nums[3..7] // &nums[..10]
-```
+  // SLICE
+  // &[i32] means reference to an array of type i32.
+  // [0..3] OR [..3] fetches the first 3 elements, excl. the element at index 3.
+  let s: &[i32] = &nums[0..3]; // &nums[..3]
+  // Last 3 indexes
+  let s: &[i32] = &nums[7..10] // &nums[7..]
+  // Middle 4 indexes
+  let s: &[i32] = &nums[3..7] // &nums[..10]
+  ```
 
-- **String vs &str**: **String** is when we need ownership or mutability. **&str** is used for read-only string or string literals.
+- **String and &str**: **String** is when we need ownership or mutability. **&str** is used for read-only string or string literals.
   **String** is an **owned, heap-allocated string**. It’s a growable, mutable collection of UTF-8 bytes.
   In the code below, `String::from(...)` (or `"HEY!".to_string()`) - explicitly asking Rust to allocate and take ownership.
 
@@ -305,4 +317,130 @@ let s: &[i32] = &nums[3..7] // &nums[..10]
   let a = "Rust";
   let mut msg = format!("Hello {a}");
   println!("{msg}"); // Hello Rust
+  ```
+
+- **Enums**: An enum (short for enumeration) is a type that can represent one of several possible variants. Enums are powerful because they let you encode states in a type-safe way.
+
+  > Note: If we wish to print the value of an enum we must define `#[derive(Debug)]` just above the enum declaration.
+
+  ```rust
+  // A simple enum declaration
+  enum Direction {
+    North,
+    South,
+    East,
+    West,
+  }
+
+  let dir = Direction::North;
+
+  // An enum that can carry values (like structs)
+  #[derive(Debug)]
+  enum Message {
+    Quit,                    // no data
+    Move { x: i32, y: i32 }, // struct-like
+    Write(String),           // tuple-like
+    ChangeColor(u8, u8, u8), // tuple-like
+  }
+  let msg: Message = Message::Move{ x: 100, y: 50};
+  println!("{:?}", msg);
+  ```
+
+  - **Option<T>**: A generic enum in Rust that represents an optional value.
+    - **`Some(T)`** means a value of type `T` is present.
+    - **`None`** means no value is present.
+
+  This allows handling the possibility of absence **_safely_** without resorting to nulls or panics. Many APIs return Option when a value may or may not exist (e.g., looking up a key in a map, accessing an array element by index). By explicitly handling both cases, it prevents runtime errors like null pointer exceptions.
+
+  - **Result<T, E>**: A generic enum used for error handling in Rust.
+    - **`Ok(T)`** means an operation succeeded and returns a value of type T.
+    - **`Err(E)`** means the operation failed and returns an error value of type E.
+
+  This makes error handling explicit and type-safe. Instead of panicking or throwing exceptions, functions return a Result and the caller decides how to handle success or failure.
+
+- **Structs**: A data type that can be used to group different data types into a single data type.
+
+  ```rust
+  // Different ways to define a struct
+  // 1. With Curly braces
+  struct Point {
+    x: i32,
+    y: i32
+  }
+  // 2. with Circular braces
+  struct Point3D(i32,i32,i32);
+
+  // 3. Empty struct
+  struct Im_Empty;
+
+  // 4. Nested Struct
+  struct Circle {
+    radius: u32,
+    center: Point // <--- another struct
+  }
+
+  // Exported struct with public fields in order to be accessible
+  pub struct Circle {
+    pub radius: u32,
+    pub center: Point
+  }
+
+  fn main() {
+    let p = Point {x: 1, y: 1};
+    println!("X: {} | Y: {}", p.x, p.y);
+    let p = Point3D(-1, 0, 1);
+    println!("Point 3D ({:?}, {:?}, {:?})", p.0, p.1, p.2);
+    let circle = Circle{
+      radius: 5,
+      center: Point { x: 0, y: 0}
+    }
+  }
+
+  // Copy fields
+  let p0 = Point {x: 1, y: 2};
+  let p1 = Point {x: 1, y: p0.y}
+  let p1 = Point {x: 2, ..p0}; // Copy all other fields of p0, except x.
+
+  // Update
+  let mut p = Point { x: 0, y: 0};
+  p.x += 1;   // Point {x: 1, y: 0}
+  p.y = 100;  // Point {x: 1, y: 100}
+  ```
+
+- **Vector**: A Vector is like an array, a collection of items of the same type. But unlike arrays in Rust that have a fixed length at compile time, Vectors can be dynamically sized at run time.
+
+  ```rust
+  // In order to be able to push elements to it, we must add `mut`.
+  let mut v: Vec<i32> = Vec::new();
+  v.push(1);
+  v.push(2);
+  v.push(3);
+  println!("{:?}", v);
+
+  // In-line intialisation and assignment of values
+  // Uses the `vec!` macro.
+  let v: Vec<i8> = vec![1,2,3];
+  // OR
+  let v = vec![1i8, 2, 3];
+  // Creating a vector of 100 0s.
+  let v = vec![0i8; 100];
+
+  // Get function - allows for safely accessing values (preventing panic calls)
+  // Option<&i8>
+  // Index valid => Some(&val)
+  // Index invalid => None
+  println!("{:?}", v.get(0));   // Some(0)
+  println!("{:?}", v.get(100)); // None
+
+  // Update a vector
+  let mut v: Vec<i8> = vec![1,2,3];
+  v[0] = 99;
+  // pop - removing last element
+  let x: Option<i8> = v.pop();
+  println!("{:?}", x); // Some(3)
+
+  // Slice
+  let v = vec![1,2,3, 4, 5];
+  let s = &v[0..3];
+  println!("{:?}", s); // [1,2,3]
   ```
