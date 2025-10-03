@@ -13,8 +13,6 @@ The official package manager and the build system for Rust. It is used to initia
 
 - `cargo test` - Executes all the defined tests.
 
-## Concepts
-
 ### **Macros**
 
 Functions that end with an exclamation mark (!). These functions generate code at compile time and prevent runtime errors. Some common macros are listed below:
@@ -287,37 +285,50 @@ Data types that represent a single value.
   ```
 
 - **String and &str**: **String** is when we need ownership or mutability. **&str** is used for read-only string or string literals.
-  **String** is an **owned, heap-allocated string**. It’s a growable, mutable collection of UTF-8 bytes.
-  In the code below, `String::from(...)` (or `"HEY!".to_string()`) - explicitly asking Rust to allocate and take ownership.
+  Stack: (fixed size, lives in the function frame)
 
-  ```rust
-  let msg: String = String::from("HEY!");
+  ```md
+  # String (a struct) lives on a stack, but has a ptr to the bytes (the contents of the string) stored in the heap
+
+  Stack: (fixed size, lives in the function frame)
+  ┌──────────────────────┐
+  │ s.ptr ──────────────────► Heap: [ 'h', 'e', 'l', 'l', 'o' ]
+  │ s.len = 5 │
+  │ s.cap = 5 │
+  └──────────────────────┘
   ```
 
-  **&String** and **&str** are called references to a string and a slice respectively.
-  **Implicit conversion from a `String` -> `str`** works but not the other way round. Checkout this in action below:
+**String** is an **owned, heap-allocated string**. It’s a growable, mutable collection of UTF-8 bytes.
+In the code below, `String::from(...)` (or `"HEY!".to_string()`) - explicitly asking Rust to allocate and take ownership.
 
-  ```rust
-  fn print(s: &str) {
-    println!("Slice: {s}");
-  }
-  let msg: String = String::from("HEY!");
-  print(&msg); // passing reference to a String, which Rust converts implicitly to a slice (str)/
-  ```
+```rust
+let msg: String = String::from("HEY!");
+```
 
-  **Mutability in `String`**
+**&String** and **&str** are called references to a string and a slice respectively.
+**Implicit conversion from a `String` -> `str`** works but not the other way round. Checkout this in action below:
 
-  ```rust
-  // 1. By declaring a String variable `mut`
-  let mut msg = String::from("Hello Rust!");
-  msg += " World";
-  println!("{msg}"); // Hello Rust! World
+```rust
+fn print(s: &str) {
+  println!("Slice: {s}");
+}
+let msg: String = String::from("HEY!");
+print(&msg); // passing reference to a String, which Rust converts implicitly to a slice (str)/
+```
 
-  // 2. String Interpolation - by using the `format!` macro ()
-  let a = "Rust";
-  let mut msg = format!("Hello {a}");
-  println!("{msg}"); // Hello Rust
-  ```
+**Mutability in `String`**
+
+```rust
+// 1. By declaring a String variable `mut`
+let mut msg = String::from("Hello Rust!");
+msg += " World";
+println!("{msg}"); // Hello Rust! World
+
+// 2. String Interpolation - by using the `format!` macro ()
+let a = "Rust";
+let mut msg = format!("Hello {a}");
+println!("{msg}"); // Hello Rust
+```
 
 - **Enums**: An enum (short for enumeration) is a type that can represent one of several possible variants. Enums are powerful because they let you encode states in a type-safe way.
 
@@ -444,3 +455,296 @@ Data types that represent a single value.
   let s = &v[0..3];
   println!("{:?}", s); // [1,2,3]
   ```
+
+- **HashMap**: It's a data structure used to store key-value pairs. HashMap is needed to be imported from **`use std::collections::HashMap;`**.
+
+  ```rust
+  use std::collections::HashMap;
+
+  fn main() {
+    let mut scores: HashMap<String, u32> = HashMap::new(); // init
+    scores.insert("India".to_string(), 200);
+    scores.insert("Australia".to_string(), 150);
+    println!("{:#?}", scores);
+    // Getting the value: Returns either Some(val) or None.
+    let score: Option<&u32> = scores.get("India");
+    // Update
+    // score is a mutable reference => can read and write this value.
+    let score: &mut u32 = scores.entry("India".to_string()).or_insert(0);
+    *score += 100; // dereference
+    println!("{:?}", scores.get("India")); // Some(300)
+
+  }
+  ```
+
+### Control Flow
+
+- **if-else**
+
+  ```rust
+  let x: i32 = 10;
+
+  // Conditionally assigning the value to z
+  let z: i32 = if x > 0 {
+    println!("x > 0");
+    return 1
+  } else if x < 0 {
+    println!("x < 0");
+    -1
+  } else {
+    println!("x = 0");
+    0
+  };
+
+  println!("{z}")
+  ```
+
+- **Loop**:
+
+  ```rust
+  // Loop
+  let mut i = 0;
+  // loop being used an expression (only possible for loop)
+  let z: &str = loop {
+    if i > 5 {
+     break "Loop ends here"; // <- returns the string literal on breaking
+    }
+    i += 1;
+    println!("{i}");
+    "hi"
+  };
+
+
+  // While Loop
+  let mut i = 0;
+  while i <= 5 {
+    println!("{i}");
+    i += 1;
+  }
+
+  // for loop
+  for i in 0..6 {
+     println!("{i}")
+  }
+
+  // Iterating over an array
+  let arr = [2,3,4,5,99];
+  let n: usize = arr.len();
+  for i in 0..n {
+   println!("At Index: {i}: {}", arr[i])
+  }
+  for n in arr {
+   println!("arr {}", n); // prints the values in arr
+  }
+
+  // Iterating over a vector
+  let v = vec![10, 20, 30, 40, 50];
+  // iter():
+  for x in v.iter() {
+    println!("{x}")
+  }
+  ```
+
+  **`.iter()`**:
+
+  - Borrows the collection immutably.
+  - Yields references (&T).
+  - Collection is not consumed (you can still use it after).
+
+  **`.iter_mut()`**:
+
+  - Borrows mutably.
+  - Yields mutable references (&mut T).
+  - Lets you modify elements in place.
+
+  **`into_iter()`**
+
+  - Consumes the collection (takes ownership).
+  - Yields owned values (T).
+  - After calling, the collection is moved and can’t be used again.
+
+- **match**: Similar to switch-case but with more powerful features. maps matching values/expressions to operations. **`_`** repsents default case, if nothing else matches.
+
+  ```rust
+  // With Option enum
+  let x: Option<i32> = Some(9);
+  match x {
+    Some(val) => println!("Option is {val}"),
+    None => println!("None")
+  }
+  // result of a match can be stored in a variable.
+  let z = match x {
+     Some(val) => val,
+     None => 0
+  };
+  println!("Match returned: {z}");
+
+  // With Result enum
+  let res: Result<i32, String> = Err("Oops!".to_string());
+  match res {
+   Ok(val) => println!("Result is Ok: {val}"),
+   Err(err) => println!("ERROR: {err}")
+  }
+
+  let x = 5;
+  match x {
+      0 => println!("zero"),
+      i @ 1..=5 => println!("From 1 to 5, i: {i}"), // assigning the matched value to i. (1 and 5 inclusive).
+      6 | 7 => println!("six or seven"),
+      _ => println!("other"),
+  }
+
+  enum Direction { Up, Down, Left, Right }
+  fn move_dir(dir: Direction) {
+    match dir {
+        Direction::Up => println!("Moving up"),
+        Direction::Down => println!("Moving down"),
+        Direction::Left => println!("Moving left"),
+        Direction::Right => println!("Moving right"),
+    }
+  }
+  ```
+
+- **if-let**: Used when we only need to handle one variant of an enum like `Option` or `Result`. This approach avoids the boilerplate of a full `match` statement,
+
+```rust
+let x: Option<i32> = Some(9);
+if let Some(val) = x {
+  println!("Option is {val}");
+} else {}
+// The if-let written above and match written below do the exact same thing.
+let x: Option<i32> = Some(9);
+match x {
+   Some(val) => println!("Option is {val}"),
+   None => {}
+}
+```
+
+## Ownership
+
+Ownership in Rust is primarily defined by ownersip and borrowing rules. they ensure Rust's memory safety.
+
+### **Stack & Heap**:
+
+- **Stack**:
+
+  - Memory location where data of fixed size known at compile-time is stored. Primitives like: u32, i32, bool or the ones whose size is known at compile time are all stored in the Stack.
+
+  - Data access on the stack is fast. Data is stored in LIFO way.
+
+- **Heap**: Stores data of unknown size at compile team. Dynamically sized types like String, Vector, are all stored in a heap. Data acccess is slower than stack.
+  **Note**: If we wish to intentionally store a primitive value in heap instead of stack, we can use Box:
+  ```rust
+  let boxed: Box<i32> = Box::new(1i32);
+  ```
+
+### Ownership Rules
+
+1. Each value has an owner.
+
+```rust
+let s = String::from("Rust is good!"); // owner of the string is s
+let i = 1.234; // owner of the float value is i.
+```
+
+2. There can only be one owner at a time.
+
+```rust
+let s = String::from("Rust is good!");
+let s1 = s; // ownership of string in `s` tranferred to s1
+let s2 = s1; // ownership of string in `s` tranferred to s2
+println!("{s2}") // works fine
+println!("{s1}") // gives compilation error
+println!("{s}") // gives compilation error
+```
+
+3. **When the owner goes out of scope, the value will be dropped.**
+
+   **Built-in Copy Types**:
+
+   - Integer types: (`u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize`).
+   - floating-point: (`f32`, `f64`).
+   - `bool`.
+   - `char`.
+
+   **Non-Copy Types**:
+
+   - Heap-allocating types like **String**, **Vec<T>**, **Box<T>**.
+   - Smart pointers like Rc<T>, Arc<T>.
+   - Anything that implements Drop.
+
+   ```rust
+   // ### Example 1 ###
+   // Example fn
+   fn take(s: String) {
+     println! ("take {s}");
+     // s is dropped here, when the function is done executing.
+   }
+   let s = String::from("cat"); // s is the owner of string `cat`.
+   take(s); // ownership of `cat` is transferred to scope of the function.
+   println!("{s}"); // will throw error, since s doesn't own the string `cat`.
+
+   // ### Example 2 ###
+   // If we introduce a scope in between, then also the ownership changes.
+   let s = String::from("cat"); // s is the owner of string `cat`.
+   {
+     let s1 = s;
+     // s1 is dropped here
+   } // scope ends here
+   println!("{s}"); // will throw error, since s doesn't own the string `cat`.
+   ```
+
+### Borrowing Rules
+
+Borrowing allows to temporarily use a value without actually taking ownership.
+
+- Creates a reference (either mutable or immutable).
+- **Immutable Reference**: Allows for read-only access to the variable, doesn't allow to change its value. We can have multiple immutable refereces simultaneously.
+- **Mutable Reference**: Allows for read and write access, allows ONLY ONE read and write access to the value at a time. Can't have multiple simulateous mutable references.
+- Either mutable or immutable reference is allowed, not both.
+- References must not outlive the value (value must live longer than the reference).
+
+```rust
+let s = String::from("Hey!");
+// Here, s1, s2 and s3 all have read-only (immutable) access to s.
+let s1 = &s;
+let s2 = s1;
+let s3 = &s;
+
+// Mutable reference
+let mut s = String::from("Change ME!");
+let s1 = &mut s;
+s1.push_str("NEW ADD");
+
+// s2 can mutate s once s1 is done pushing.
+let s2 = &mut s;
+s1.push_str("NEW ADD 2");
+println!("{s}") // Change ME!NEW ADDNEW ADD 2
+
+// Can't have 2 mutable references at a time
+let mut s = String::from("Change ME!");
+let s1 = &mut s;
+let s2 = &mut s;
+
+// A mutable and immutable reference cannot exist simultaneoulsy
+let mut s = String::from("YO!");
+let s1 = &s;
+let s2 = &mut s;
+
+
+// Here the ownership of s is first transferred to s1 and then to s2.
+let s = String::from("Hello!");
+let s1 = s;
+let s2 = s1;
+
+// Example - Reference must not outlive the value
+let s = String:: from ("rust") ;
+let s1 = &s;
+{
+  let s2 = s;
+  // s2 is dropped here
+} // s2 and s no longer exist
+// s1 still references s, it is outliving the original value
+
+
+```
